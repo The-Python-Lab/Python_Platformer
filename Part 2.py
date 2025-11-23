@@ -23,7 +23,7 @@ world_data = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 182, 183, 186, 0],
+    [0, 0, 0, 0, 182, 183, 186, 0, 0, 0, 0, 182, 183, 186, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 167, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [175, 174, 174, 174, 174, 174, 174, 174, 174, 174, 174, 174, 174, 174, 176],
@@ -32,19 +32,15 @@ world_data = [
 ]
 class Player:
     def __init__(self, x, y):
-        raw_img = pygame.image.load(f'Sprites/Characters/Default/character_green_1.png').convert_alpha()
+        raw_img = pygame.image.load("Sprites/Characters/Default/character_green_1.png")
         visible = raw_img.get_bounding_rect()
         cropped = raw_img.subsurface(visible)
         scaled = pygame.transform.scale_by(cropped, 1)
 
-
         self.image = scaled
         self.rect = self.image.get_rect(topleft=(x, y))
 
-        # Narrower and shorter collision rect (50x80), centered inside the body
-        self.coll_rect = pygame.Rect(x + 10, y + 10, 50, 80)
-
-        self.speed = 10
+        self.speed = 5
         self.vel_y = 0
         self.in_air = True
         self.jumped = False
@@ -54,49 +50,47 @@ class Player:
         dy = 0
 
         key = pygame.key.get_pressed()
-        # Horizontal movement
+        # horizonal movement
         if key[pygame.K_RIGHT]:
-            dx += 5
+            dx += self.speed
         if key[pygame.K_LEFT]:
-            dx -= 5
-        # Jumping
+            dx -= self.speed
+        # jumped
         if key[pygame.K_UP]:
-            if not self.jumped:
+            if not self.jumped and not self.in_air:
                 self.vel_y = -15
                 self.jumped = True
         else:
             self.jumped = False
 
-        # Gravity
+        # gravity
         self.vel_y += 0.8
         if self.vel_y > 10:
             self.vel_y = 10
         dy += self.vel_y
 
-        # Collision detection with tiles
+        # collision detection with tiles
         self.in_air = True
         for tile in world.tile_list:
             # check for collision in x direction
-            if tile[1].colliderect(self.coll_rect.x + dx, self.coll_rect.y, self.coll_rect.width, self.coll_rect.height):
+            if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.rect.width, self.rect.height):
                 dx = 0
             # check for collision in y direction
-            if tile[1].colliderect(self.coll_rect.x, self.coll_rect.y + dy, self.coll_rect.width, self.coll_rect.height):
-                # check if below the ground
+            if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.rect.width, self.rect.height):
+                # check if below th ground
                 if self.vel_y < 0:
-                    dy = tile[1].bottom - self.coll_rect.top
+                    dy = tile[1].bottom - self.rect.top
                     self.vel_y = 0
                 # check if above the ground
                 elif self.vel_y >= 0:
-                    dy = tile[1].top - self.coll_rect.bottom
+                    dy = tile[1].top - self.rect.bottom
                     self.in_air = False
 
         self.rect.x += dx
         self.rect.y += dy
-        self.coll_rect.x += dx
-        self.coll_rect.y += dy
 
         screen.blit(self.image, self.rect)
-        pygame.draw.rect(screen, (255, 0, 0), self.coll_rect, 2)
+        pygame.draw.rect(screen, (255, 0, 0), self.rect, 2)
 
 
 class World:
